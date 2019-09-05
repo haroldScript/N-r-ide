@@ -59,17 +59,17 @@ class Router {
       $this->ctrl[$_GET['n']]();
     }
         
-    $defaultLayout = str_replace("f=","",str_replace("v=","",implode("/",array_values($this->map)[0])));
+    $defaultLayout = $this->firstLayout();
     $dl = explode("/",$defaultLayout);
-
     ob_start();
     if($this->mode && is_string($view) && $view != $defaultLayout/*"default/layout"*/ || (isset($_GET['v']) && isset($_GET['f'])) ) {
       if($_GET['v'] == $dl[0] && $_GET['f'] == $dl[1])
         require $this->patchView . DIRECTORY_SEPARATOR . $dl[0] . DIRECTORY_SEPARATOR . $this->acl;
       else{
+
         require $this->patchView . DIRECTORY_SEPARATOR .((string) !(isset($_GET['v']) && isset($_GET['f'])) ? 
-        $view .'.php' :
-        $_GET['v'] . DIRECTORY_SEPARATOR . $_GET['f']) .'.php';
+        ($view .'.php') :
+        ($_GET['v'] . DIRECTORY_SEPARATOR . $_GET['f']) . ".php");
       }
       
     }
@@ -81,6 +81,12 @@ class Router {
     
     require $this->patchView . DIRECTORY_SEPARATOR . $defaultLayout.".php";
     return $this;
+  }
+  public function firstLayout() : string {
+    if($this->mode && array_values($this->map)[0][1] != "f=")
+      return str_replace("f=","",str_replace("v=","",implode("/",array_values($this->map)[0])));
+    else
+      return $this->router->match()['target'];
   }
   public function url($namedRoute, $getArray=null){
     if(isset($getArray))
